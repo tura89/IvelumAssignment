@@ -14,7 +14,7 @@ def modify_response_content(response):
     """Modify response so that every word of length 6 is followed by ™."""
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    for text in soup.find_all(text=True):
+    for text in soup.find_all(string=True):
         words = text.string.split(' ')
         for i, word in enumerate(words):
             # account for commas and other signs
