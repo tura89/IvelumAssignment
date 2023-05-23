@@ -29,7 +29,7 @@ def modify_response_content(response):
 @app.route('/', defaults={'s': ''})
 @app.route('/<string:s>')
 def home(s):
-    url_parts = request.url.split(str(LOCAL_PORT))
+    url_parts = request.url.split(str(request.url_root))
     suffix = '' if len(url_parts) <= 1 else url_parts[1]  # get url path
 
     response = requests.get(TARGET_HOST + suffix)
