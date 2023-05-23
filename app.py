@@ -1,10 +1,11 @@
+"""Main app file."""
 import re
 
-from config import LOCAL_HOST, LOCAL_PORT, TARGET_HOST
-
-from flask import Flask, request
-from bs4 import BeautifulSoup, SoupStrainer
 import requests
+from bs4 import BeautifulSoup
+from flask import Flask, request
+
+from config import LOCAL_HOST, LOCAL_PORT, TARGET_HOST
 
 app = Flask(__name__)
 
@@ -41,13 +42,14 @@ def modify_response_content(response):
     return soup.encode()
 
 
-@app.route('/', defaults={'s': ''})
-@app.route('/<string:s>')
-def home(s):
+@app.route('/', defaults={'path': ''})
+@app.route('/<string:path>')
+def home(path):  # pylint: disable=unused-argument
+    """Proxy server for Hacker News."""
     url_parts = request.url.split(str(request.url_root))
     suffix = '' if len(url_parts) <= 1 else url_parts[1]  # get url path
 
-    response = requests.get(TARGET_HOST + suffix)
+    response = requests.get(TARGET_HOST + suffix, timeout=15)
 
     modified_content = modify_response_content(response)
 
