@@ -27,10 +27,15 @@ def modify_response_content(response):
         # replace original text with modified one
         text.replace_with(BeautifulSoup(content, 'html.parser'))
 
+    # make sure links to hacker news lead to local site
     hn_links = ['https://www.ycombinator.com', 'https://news.ycombinator.com']
     for link in soup.find_all('a', href=True):
         for hnl in hn_links:
             link['href'] = link['href'].replace(hnl, '/')
+
+    # account for image sources
+    for image in soup.find_all('img'):
+        image['src'] = 'https://news.ycombinator.com/' + image['src']
 
     # return encoded content
     return soup.encode()
