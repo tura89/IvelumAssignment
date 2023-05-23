@@ -1,11 +1,8 @@
+from config import LOCAL_HOST, LOCAL_PORT, TARGET_HOST
+
 from flask import Flask, request
 from bs4 import BeautifulSoup
 import requests
-
-LOCAL_HOST = '127.0.0.1'
-LOCAL_PORT = 8080
-
-TARGET_HOST = 'https://news.ycombinator.com'
 
 app = Flask(__name__)
 
@@ -32,7 +29,9 @@ def modify_response_content(response):
 @app.route('/', defaults={'s': ''})
 @app.route('/<string:s>')
 def home(s):
-    suffix = request.url.split(str(LOCAL_PORT))[1]
+    url_parts = request.url.split(str(LOCAL_PORT))
+    suffix = '' if len(url_parts) <= 1 else url_parts[1]  # get url path
+
     response = requests.get(TARGET_HOST + suffix)
 
     modified_content = modify_response_content(response)
