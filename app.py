@@ -1,3 +1,5 @@
+import re
+
 from config import LOCAL_HOST, LOCAL_PORT, TARGET_HOST
 
 from flask import Flask, request
@@ -14,9 +16,12 @@ def modify_response_content(response):
     for text in soup.find_all(text=True):
         words = text.string.split(' ')
         for i, word in enumerate(words):
-            # TODO: account for commas and other signs
-            if len(word) == 6:
-                words[i] = f'{word}™'
+            # account for commas and other signs
+            word_text = re.sub(r'[\W_]', '', word)
+
+            if len(word_text) == 6:
+                words[i] = word.replace(word_text, f'{word_text}™')
+
         content = ' '.join(words)
 
         # replace original text with modified one
