@@ -3,7 +3,7 @@ import re
 from config import LOCAL_HOST, LOCAL_PORT, TARGET_HOST
 
 from flask import Flask, request
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 import requests
 
 app = Flask(__name__)
@@ -26,6 +26,11 @@ def modify_response_content(response):
 
         # replace original text with modified one
         text.replace_with(BeautifulSoup(content, 'html.parser'))
+
+    hn_links = ['https://www.ycombinator.com', 'https://news.ycombinator.com']
+    for link in soup.find_all('a', href=True):
+        for hnl in hn_links:
+            link['href'] = link['href'].replace(hnl, '/')
 
     # return encoded content
     return soup.encode()
