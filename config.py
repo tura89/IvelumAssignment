@@ -3,3 +3,4 @@ LOCAL_PORT = 8080
 TEST_PORT = 8001
 
 TARGET_HOST = 'https://news.ycombinator.com/'
+HN_LINKS = ['https://www.ycombinator.com', 'https://news.ycombinator.com']

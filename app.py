@@ -1,44 +1,43 @@
 """Main app file."""
 import re
 
+import bs4
 import requests
 from bs4 import BeautifulSoup
 from flask import Flask, request
 
-from config import LOCAL_HOST, LOCAL_PORT, TARGET_HOST
+from config import HN_LINKS, LOCAL_HOST, LOCAL_PORT, TARGET_HOST
 
 app = Flask(__name__)
 
 
-def modify_response_content(response):
-    """Modify response so that every word of length 6 is followed by ™."""
-    soup = BeautifulSoup(response.content, 'html.parser')
+def modify_response_content(content):
+    """
+    Modify site content as per requirements.
 
-    for text in soup.find_all(string=True):
-        words = text.string.split(' ')
-        for i, word in enumerate(words):
-            # account for commas and other signs
-            word_text = re.sub(r'[\W_]', '', word)
+    Each word of length 6 is appended by trademark symbol.
+    All the links leading to hackernews lead to local website instead.
 
-            if len(word_text) == 6:
-                words[i] = word.replace(word_text, f'{word_text}™')
+    :param content: contents of response from hacker news
+    :return: modified content
+    """
+    soup = BeautifulSoup(content, 'html5lib')
 
-        content = ' '.join(words)
+    # word that contains exactly 6 alphabetic characters,
+    # optionally followed by a punctuation mark
+    pattern = r'(^| )([A-Za-z]){6}(?=[\s!.,?;:-]|$)'
 
-        # replace original text with modified one
-        text.replace_with(BeautifulSoup(content, 'html.parser'))
+    for node in soup.find_all(lambda tag: any(isinstance(t, bs4.NavigableString) for t in tag)):
+        subnodes = [t for t in node.contents if isinstance(t, bs4.NavigableString)]
+        for text in subnodes:
+            if text.parent.name not in ['script', 'style']:
+                res = re.sub(pattern, r'\g<0>™', str(text))
+                text.replace_with(res)
 
-    # make sure links to hacker news lead to local site
-    hn_links = ['https://www.ycombinator.com', 'https://news.ycombinator.com']
     for link in soup.find_all('a', href=True):
-        for hnl in hn_links:
+        for hnl in HN_LINKS:
             link['href'] = link['href'].replace(hnl, '/')
 
-    # account for image sources
-    for image in soup.find_all('img'):
-        image['src'] = 'https://news.ycombinator.com/' + image['src']
-
-    # return encoded content
     return soup.encode()
 
 
@@ -51,7 +50,8 @@ def home(path):  # pylint: disable=unused-argument
 
     response = requests.get(TARGET_HOST + suffix, timeout=15)
 
-    modified_content = modify_response_content(response)
+    content = response.content.decode('utf-8')
+    modified_content = modify_response_content(content)
 
     return modified_content, response.status_code
 

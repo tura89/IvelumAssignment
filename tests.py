@@ -24,3 +24,14 @@ def test_custom_page(client):
     response = client.get('/item?id=13713480')
     assert response.status_code == 200
     assert 'header™,' in response.text
+
+
+def test_feedback_page(client):
+    """Test the url from the feedback email."""
+    response = client.get('/item?id=16090815')
+    assert response.status_code == 200
+
+    # make sure it's not nitens™.org
+    assert "http://nitens.org/taraborelli/TeXOpenType" in response.text
+    assert "&thinsp;" in response.text
+    assert "mostly™" in response.text
