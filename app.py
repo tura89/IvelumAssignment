@@ -25,7 +25,7 @@ def modify_response_content(content):
 
     # word that contains exactly 6 alphabetic characters,
     # optionally followed by a punctuation mark
-    pattern = r'(^| )([A-Za-z]){6}(?=[\s!.,?;:-]|$)'
+    pattern = r'(^| |\"|\')[\w]{6}(?=[\s!.,?;:-]|$)'
 
     for node in soup.find_all(lambda tag: any(isinstance(t, bs4.NavigableString) for t in tag)):
         subnodes = [t for t in node.contents if isinstance(t, bs4.NavigableString)]
@@ -48,12 +48,19 @@ def home(path):  # pylint: disable=unused-argument
     url_parts = request.url.split(str(request.url_root))
     suffix = '' if len(url_parts) <= 1 else url_parts[1]  # get url path
 
-    response = requests.get(TARGET_HOST + suffix, timeout=15)
+    response = requests.get(TARGET_HOST + suffix, headers=request.headers, timeout=15)
 
-    content = response.content.decode('utf-8')
-    modified_content = modify_response_content(content)
+    content = response.content
 
-    return modified_content, response.status_code
+    # only replace in html, not in javascript
+    if 'text/html' in response.headers.get('Content-type', ''):
+        content = modify_response_content(content.decode('utf-8'))
+
+    response_headers = response.headers
+    for encoding in ['Content-Encoding', 'Transfer-Encoding']:
+        response_headers.pop(encoding, None)
+
+    return content, response.status_code, dict(response_headers)
 
 
 if __name__ == '__main__':
